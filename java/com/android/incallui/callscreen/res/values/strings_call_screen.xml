@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Call Screen Status Messages -->
+    <string name="call_screen_status_screening">Screening call...</string>
+    <string name="call_screen_status_playing">Playing greeting...</string>
+    <string name="call_screen_status_listening">Listening...</string>
+
+    <!-- Privacy Indicator -->
+    <string name="call_screen_privacy_indicator">On-device only - not sent to any server</string>
+
+    <!-- Response Buttons -->
+    <string name="call_screen_is_urgent">Is it urgent?</string>
+    <string name="call_screen_call_back">Call back</string>
+    <string name="call_screen_repeat">Repeat</string>
+    <string name="call_screen_not_interested">Not interested</string>
+
+    <!-- Primary Action Buttons -->
+    <string name="call_screen_answer">Answer</string>
+    <string name="call_screen_decline">Decline</string>
+
+    <!-- Settings -->
+    <string name="call_screen_settings_title">Call Screen</string>
+    <string name="call_screen_enable_title">Enable Call Screen</string>
+    <string name="call_screen_enable_summary">Screen incoming calls before answering</string>
+    <string name="call_screen_auto_mode_title">Auto-screen calls from</string>
+    <string name="call_screen_save_audio_title">Save caller audio</string>
+    <string name="call_screen_save_audio_summary">Save recordings of what callers say during screening</string>
+
+    <!-- Auto-screen Mode Options -->
+    <string name="call_screen_auto_manual_only">Manual only</string>
+    <string name="call_screen_auto_unknown">Unknown numbers</string>
+    <string name="call_screen_auto_private">Private/hidden numbers</string>
+    <string name="call_screen_auto_all">All calls</string>
+
+    <!-- Call Log -->
+    <string name="call_screen_log_screened">Screened call</string>
+    <string name="call_screen_log_answered">Answered after screening</string>
+    <string name="call_screen_log_declined">Declined after screening</string>
+    <string name="call_screen_log_timeout">Screening timed out</string>
+    <string name="call_screen_log_caller_hungup">Caller hung up during screening</string>
+
+    <!-- Notifications -->
+    <string name="call_screen_notification_title">Screening call</string>
+    <string name="call_screen_notification_text">Tap to view transcript</string>
+</resources>

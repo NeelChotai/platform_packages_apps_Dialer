@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/call_screen_background">
+
+    <!-- Screening Status Banner -->
+    <TextView
+        android:id="@+id/screening_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/call_screen_status_screening"
+        android:textColor="@color/call_screen_text_primary"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="8dp"
+        android:background="@color/call_screen_banner_background" />
+
+    <!-- Transcript Display -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:id="@+id/transcript_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/call_screen_text_primary"
+            android:textSize="16sp"
+            android:lineSpacingMultiplier="1.2"
+            tools:text="Hello, this is John from..." />
+
+    </ScrollView>
+
+    <!-- Privacy Indicator -->
+    <TextView
+        android:id="@+id/privacy_indicator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/call_screen_privacy_indicator"
+        android:textColor="@color/call_screen_text_secondary"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:drawablePadding="4dp"
+        android:paddingBottom="8dp" />
+
+    <!-- Response Buttons -->
+    <LinearLayout
+        android:id="@+id/response_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/button_is_urgent"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:text="@string/call_screen_is_urgent"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/button_call_back"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:text="@string/call_screen_call_back"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/button_repeat"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="@string/call_screen_repeat"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+    <!-- Primary Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/button_decline"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="@string/call_screen_decline"
+            android:backgroundTint="#F44336" />
+
+        <Button
+            android:id="@+id/button_answer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="@string/call_screen_answer"
+            android:backgroundTint="#4CAF50" />
+
+    </LinearLayout>
+
+</LinearLayout>

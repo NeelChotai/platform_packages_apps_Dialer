@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="call_screen_background">#212121</color>
+    <color name="call_screen_banner_background">#1565C0</color>
+    <color name="call_screen_text_primary">#FFFFFF</color>
+    <color name="call_screen_text_secondary">#B0B0B0</color>
+    <color name="call_screen_answer_button">#4CAF50</color>
+    <color name="call_screen_decline_button">#F44336</color>
+</resources>
