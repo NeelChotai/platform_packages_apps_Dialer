@@ -1,6 +1,8 @@
 package com.android.incallui.callscreen;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.telecom.Call;
 
 import androidx.annotation.NonNull;
@@ -57,6 +59,9 @@ public class CallScreenCoordinator {
     private TtsEngine ttsEngine;
     @Nullable
     private TranscriptionEngine transcriptionEngine;
+
+    private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    private final Runnable timeoutRunnable = this::handleTimeout;
 
     public CallScreenCoordinator(@NonNull Context context) {
         this.context = context.getApplicationContext();
@@ -126,6 +131,9 @@ public class CallScreenCoordinator {
         activeSession.setState(CallScreenState.PLAYING_GREETING);
         callback.onScreeningStarted(activeSession);
 
+        // Start screening timeout
+        timeoutHandler.postDelayed(timeoutRunnable, SCREENING_TIMEOUT_MS);
+
         playGreeting();
 
         return true;
@@ -151,21 +159,36 @@ public class CallScreenCoordinator {
         ttsEngine = new TtsEngine();
         ttsEngine.initialize(context, new TtsCallback());
 
-        // Initialize transcription (use stub for now)
-        transcriptionEngine = new StubTranscriptionEngine();
+        // Initialize transcription engine
+        transcriptionEngine = new BufferingTranscriptionEngine();
         transcriptionEngine.initialize();
 
         return true;
     }
 
     private void playGreeting() {
-        if (ttsEngine == null || !ttsEngine.isReady()) {
-            LogUtil.w(TAG, "TTS not ready, skipping greeting");
+        if (ttsEngine == null || !ttsEngine.isReady() || audioInjector == null) {
+            LogUtil.w(TAG, "TTS or AudioInjector not ready, skipping greeting");
             startTranscription();
             return;
         }
 
-        ttsEngine.speak(CallScreenPrompts.GREETING, "greeting");
+        ttsEngine.synthesizeToBuffer(CallScreenPrompts.GREETING, "greeting",
+                new TtsEngine.AudioSynthesisCallback() {
+                    @Override
+                    public void onAudioReady(byte[] audioData, String utteranceId) {
+                        if (audioInjector != null) {
+                            audioInjector.playAudio(audioData, TtsEngine.SAMPLE_RATE);
+                        }
+                        startTranscription();
+                    }
+
+                    @Override
+                    public void onSynthesisError(String utteranceId, int errorCode) {
+                        LogUtil.e(TAG, "TTS synthesis failed: " + errorCode);
+                        startTranscription(); // Continue without greeting
+                    }
+                });
     }
 
     private void startTranscription() {
@@ -204,10 +227,25 @@ public class CallScreenCoordinator {
 
         activeSession.setState(CallScreenState.DECLINING);
         // Play "not interested" message before hanging up
-        if (ttsEngine != null && ttsEngine.isReady()) {
-            ttsEngine.speak(CallScreenPrompts.NOT_INTERESTED, "decline");
+        if (ttsEngine != null && ttsEngine.isReady() && audioInjector != null) {
+            ttsEngine.synthesizeToBuffer(CallScreenPrompts.NOT_INTERESTED, "decline",
+                    new TtsEngine.AudioSynthesisCallback() {
+                        @Override
+                        public void onAudioReady(byte[] audioData, String utteranceId) {
+                            if (audioInjector != null) {
+                                audioInjector.playAudio(audioData, TtsEngine.SAMPLE_RATE);
+                            }
+                            endScreening(EndReason.USER_DECLINED);
+                        }
+
+                        @Override
+                        public void onSynthesisError(String utteranceId, int errorCode) {
+                            endScreening(EndReason.USER_DECLINED);
+                        }
+                    });
+        } else {
+            endScreening(EndReason.USER_DECLINED);
         }
-        endScreening(EndReason.USER_DECLINED);
     }
 
     /**
@@ -216,12 +254,33 @@ public class CallScreenCoordinator {
      * @param promptId The ID of the prompt to send
      */
     public void sendPrompt(int promptId) {
-        if (activeSession == null || ttsEngine == null) return;
+        if (activeSession == null || ttsEngine == null || audioInjector == null) return;
 
         String prompt = CallScreenPrompts.getPromptById(promptId);
         if (prompt != null) {
             activeSession.setState(CallScreenState.PLAYING_FOLLOWUP);
-            ttsEngine.speak(prompt, "prompt_" + promptId);
+            ttsEngine.synthesizeToBuffer(prompt, "prompt_" + promptId,
+                    new TtsEngine.AudioSynthesisCallback() {
+                        @Override
+                        public void onAudioReady(byte[] audioData, String utteranceId) {
+                            if (audioInjector != null) {
+                                audioInjector.playAudio(audioData, TtsEngine.SAMPLE_RATE);
+                            }
+                            // Resume transcription after follow-up
+                            if (activeSession != null) {
+                                activeSession.setState(CallScreenState.TRANSCRIBING);
+                            }
+                        }
+
+                        @Override
+                        public void onSynthesisError(String utteranceId, int errorCode) {
+                            LogUtil.e(TAG, "Prompt synthesis failed: " + errorCode);
+                            // Resume transcription even on error
+                            if (activeSession != null) {
+                                activeSession.setState(CallScreenState.TRANSCRIBING);
+                            }
+                        }
+                    });
         }
     }
 
@@ -232,8 +291,38 @@ public class CallScreenCoordinator {
         endScreening(EndReason.CALLER_HUNG_UP);
     }
 
+    /**
+     * Handles screening timeout.
+     */
+    private void handleTimeout() {
+        LogUtil.w(TAG, "Screening timeout reached");
+
+        if (ttsEngine != null && ttsEngine.isReady() && audioInjector != null) {
+            ttsEngine.synthesizeToBuffer(CallScreenPrompts.TIMEOUT, "timeout",
+                    new TtsEngine.AudioSynthesisCallback() {
+                        @Override
+                        public void onAudioReady(byte[] audioData, String utteranceId) {
+                            if (audioInjector != null) {
+                                audioInjector.playAudio(audioData, TtsEngine.SAMPLE_RATE);
+                            }
+                            endScreening(EndReason.TIMEOUT);
+                        }
+
+                        @Override
+                        public void onSynthesisError(String utteranceId, int errorCode) {
+                            endScreening(EndReason.TIMEOUT);
+                        }
+                    });
+        } else {
+            endScreening(EndReason.TIMEOUT);
+        }
+    }
+
     private void endScreening(EndReason reason) {
         if (activeSession == null) return;
+
+        // Cancel the timeout
+        timeoutHandler.removeCallbacks(timeoutRunnable);
 
         CallScreenSession session = activeSession;
         session.setState(CallScreenState.CLEANING_UP);
@@ -249,6 +338,9 @@ public class CallScreenCoordinator {
      * Cleans up all resources. Safe to call multiple times.
      */
     public void cleanup() {
+        // Cancel any pending timeout
+        timeoutHandler.removeCallbacks(timeoutRunnable);
+
         if (audioInjector != null) {
             audioInjector.release();
             audioInjector = null;
@@ -331,6 +423,23 @@ public class CallScreenCoordinator {
         @Override
         public void onError(int errorCode, @NonNull String errorMessage) {
             LogUtil.e(TAG, "Transcription error: " + errorMessage);
+            // Non-fatal: continue session, user can still answer/decline
+            if (callback != null) {
+                callback.onTranscriptUpdated("[Transcription unavailable]");
+            }
         }
+    }
+
+    /**
+     * Handles a fatal error that requires ending the screening session.
+     *
+     * @param error Description of the error
+     */
+    private void handleFatalError(String error) {
+        LogUtil.e(TAG, "Fatal screening error: " + error);
+        if (callback != null) {
+            callback.onScreeningFailed(error);
+        }
+        cleanup();
     }
 }

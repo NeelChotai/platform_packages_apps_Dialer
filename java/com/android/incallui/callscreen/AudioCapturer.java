@@ -9,6 +9,8 @@ import androidx.annotation.Nullable;
 
 import com.android.dialer.common.LogUtil;
 
+import java.util.Arrays;
+
 /**
  * Captures audio from the caller during a call.
  *
@@ -126,11 +128,16 @@ public class AudioCapturer {
         int bufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
         byte[] buffer = new byte[bufferSize];
 
-        while (shouldCapture && audioRecord != null) {
-            int bytesRead = audioRecord.read(buffer, 0, buffer.length);
-            if (bytesRead > 0 && callback != null) {
-                callback.onAudioCaptured(buffer, bytesRead);
+        try {
+            while (shouldCapture && audioRecord != null) {
+                int bytesRead = audioRecord.read(buffer, 0, buffer.length);
+                if (bytesRead > 0 && callback != null) {
+                    callback.onAudioCaptured(buffer, bytesRead);
+                }
             }
+        } finally {
+            // Zero the buffer when capture ends for security
+            Arrays.fill(buffer, (byte) 0);
         }
     }
 

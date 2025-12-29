@@ -198,6 +198,9 @@ android {
         unitTests {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
+            all {
+                it.useJUnitPlatform()
+            }
         }
     }
 
@@ -259,10 +262,14 @@ dependencies {
     compileOnly("com.google.errorprone:error_prone_annotations:2.15.0")
     compileOnly("javax.annotation:javax.annotation-api:1.3.2")
 
-    // Test dependencies
-    testImplementation("junit:junit:4.13.2")
+    // Test dependencies - JUnit 5
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // JUnit 4 vintage engine for backward compatibility during migration
+    testImplementation("org.junit.vintage:junit-vintage-engine:5.10.0")
     testImplementation("org.robolectric:robolectric:4.14.1")
     testImplementation("org.mockito:mockito-core:5.14.2")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.14.2")
     testImplementation("androidx.test:core:1.6.1")
     testImplementation("androidx.test.ext:junit:1.2.1")
     testImplementation("com.google.truth:truth:1.4.4")
